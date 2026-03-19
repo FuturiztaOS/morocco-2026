@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇲🇦 Morocco 2026</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e67e22">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Morocco Trip">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1009; --surface: #1a1a0f; --surface2: #252510;
+  --accent: #e67e22; --accent2: #c0392b; --green: #2ecc71;
+  --red: #e74c3c; --orange: #f39c12; --gold: #f1c40f;
+  --text: #f5f0e8; --muted: #9a8f7a; --border: #3a3520; --card: #1e1e0f;
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; overflow-x: hidden; }
+
+.header { background: linear-gradient(135deg,#1a1a0f,#2a2010); border-bottom: 2px solid var(--accent); padding: 12px 16px 10px; }
+.header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.header-title h1 { font-size: 17px; font-weight: 700; color: var(--accent); }
+.header-title p { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.weather-pill { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; flex-shrink: 0; }
+.weather-temp { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.weather-city { font-size: 10px; color: var(--muted); }
+.weather-desc { font-size: 10px; color: var(--muted); text-align: right; }
+.header-meta { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.badge { background: var(--surface2); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; font-size: 10px; color: var(--muted); }
+.badge.green { border-color: var(--green); color: var(--green); }
+.badge.orange { border-color: var(--orange); color: var(--orange); }
+
+.tab-nav { background: var(--surface); overflow-x: auto; display: flex; border-bottom: 1px solid var(--border); scrollbar-width: none; position: sticky; top: 0; z-index: 100; }
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn { padding: 9px 14px; background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; transition: all .2s; font-family: inherit; }
+.tab-btn:hover { color: var(--text); background: var(--surface2); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); background: var(--surface2); }
+.tab-btn.today-tab { position: relative; }
+.tab-btn.today-tab::after { content: '●'; position: absolute; top: 3px; right: 3px; font-size: 6px; color: var(--orange); }
+.tab-btn .day-num { display: block; font-weight: 700; font-size: 13px; }
+.tab-btn .day-name { display: block; font-size: 9px; }
+
+#content-wrap { position: relative; touch-action: pan-y; }
+.tab-content { display: none; padding: 0 0 80px 0; max-width: 800px; margin: 0 auto; }
+.tab-content.active { display: block; }
+
+.day-hero { width: 100%; min-height: 170px; background-size: cover; background-position: center; position: relative; overflow: hidden; background-color: var(--surface2); }
+.day-hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(15,16,9,0.9) 100%); }
+.day-hero-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 12px 16px; z-index: 2; }
+.day-hero-label { font-size: 18px; font-weight: 800; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+.day-hero-sub { font-size: 11px; color: rgba(255,255,255,.75); margin-top: 2px; }
+
+.tab-inner { padding: 14px 16px; }
+
+.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+.card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.card-icon { font-size: 17px; }
+.card-title { font-size: 13px; font-weight: 700; }
+.tag { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; margin-left: 5px; }
+.tag.booked { background: rgba(46,204,113,.15); color: var(--green); border: 1px solid var(--green); }
+.tag.book-now { background: rgba(231,76,60,.15); color: var(--red); border: 1px solid var(--red); }
+
+.map-btn { display: inline-flex; align-items: center; gap: 3px; background: rgba(230,126,34,.12); border: 1px solid rgba(230,126,34,.35); color: var(--accent); padding: 3px 8px; border-radius: 10px; font-size: 10px; text-decoration: none; white-space: nowrap; }
+.book-link { display: inline-flex; align-items: center; gap: 3px; background: rgba(231,76,60,.12); border: 1px solid rgba(231,76,60,.4); color: #ff8080; padding: 3px 9px; border-radius: 10px; font-size: 10px; text-decoration: none; font-weight: 600; white-space: nowrap; }
+.map-links { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; }
+
+.timeline { position: relative; padding-left: 18px; }
+.timeline::before { content: ''; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 2px; background: var(--border); border-radius: 2px; }
+.tl-item { position: relative; padding-bottom: 16px; }
+.tl-item:last-child { padding-bottom: 0; }
+.tl-item::before { content: ''; position: absolute; left: -14px; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.tl-item.highlight::before { background: var(--orange); }
+.tl-item.done::before { background: var(--green); }
+.tl-time { font-size: 10px; color: var(--accent); font-weight: 700; margin-bottom: 2px; }
+.tl-text { font-size: 13px; line-height: 1.45; }
+.tl-sub { font-size: 11px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+
+.hotel-box { background: var(--surface2); border-radius: 8px; padding: 11px; display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+.hotel-name { font-size: 13px; font-weight: 700; }
+.hotel-meta { display: flex; gap: 8px; flex-wrap: wrap; }
+.hotel-meta-item { font-size: 10px; color: var(--muted); }
+.hotel-meta-item span { color: var(--text); font-weight: 600; }
+
+.tip { background: rgba(230,126,34,.08); border-left: 3px solid var(--accent); padding: 7px 10px; border-radius: 0 8px 8px 0; font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.5; }
+.tip strong { color: var(--text); }
+.warning { background: rgba(231,76,60,.08); border-left: 3px solid var(--red); padding: 7px 10px; border-radius: 0 8px 8px 0; font-size: 11px; color: #ff9999; margin-bottom: 8px; line-height: 1.5; }
+.luggage-note { background: rgba(192,57,43,.1); border: 1px solid rgba(192,57,43,.35); border-radius: 8px; padding: 9px 11px; font-size: 11px; color: #ffb3ae; margin-bottom: 10px; }
+
+/* LOCAL INTEL */
+details.intel { background: rgba(230,126,34,.07); border: 1px solid rgba(230,126,34,.25); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
+details.intel summary { padding: 12px 14px; font-size: 13px; font-weight: 700; color: var(--accent); cursor: pointer; list-style: none; display: flex; align-items: center; gap: 8px; }
+details.intel summary::-webkit-details-marker { display: none; }
+details.intel summary::after { content: '›'; margin-left: auto; font-size: 18px; transition: transform .2s; }
+details.intel[open] summary::after { transform: rotate(90deg); }
+.intel-body { padding: 0 14px 14px; }
+.intel-section { margin-bottom: 12px; }
+.intel-section:last-child { margin-bottom: 0; }
+.intel-section-title { font-size: 10px; font-weight: 700; color: var(--gold); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.intel-item { display: flex; gap: 8px; padding: 5px 0; border-bottom: 1px solid rgba(58,53,32,.6); font-size: 12px; line-height: 1.45; }
+.intel-item:last-child { border-bottom: none; }
+.intel-icon { flex-shrink: 0; font-size: 14px; }
+.intel-body-txt strong { color: var(--text); }
+.intel-body-txt span { color: var(--muted); }
+
+.food-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; line-height: 1.4; }
+.food-item:last-child { border-bottom: none; }
+
+.stats-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-bottom: 12px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; text-align: center; }
+.stat-value { font-size: 22px; font-weight: 800; color: var(--accent); }
+.stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+.currency-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+.currency-title { font-size: 11px; font-weight: 700; color: var(--gold); margin-bottom: 8px; }
+.currency-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.currency-row:last-child { border-bottom: none; }
+
+.checklist { list-style: none; }
+.checklist li { display: flex; align-items: flex-start; gap: 8px; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.checklist li:last-child { border-bottom: none; }
+.check-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.check-body { flex: 1; }
+.check-label { font-size: 12px; line-height: 1.4; }
+.check-platform { font-size: 10px; color: var(--muted); margin-top: 1px; }
+.check-actions { display: flex; gap: 5px; margin-top: 5px; flex-wrap: wrap; }
+.check-urgency { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.urgency-urgent { background: rgba(231,76,60,.2); color: var(--red); }
+.urgency-soon { background: rgba(243,156,18,.2); color: var(--orange); }
+.urgency-done { background: rgba(46,204,113,.15); color: var(--green); }
+
+.swipe-nav { display: flex; justify-content: space-between; padding: 10px 16px; opacity: 0.35; font-size: 12px; color: var(--muted); }
+
+#pwa-prompt { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--surface2); border: 1px solid var(--accent); border-radius: 16px; padding: 13px 16px; display: none; z-index: 200; box-shadow: 0 8px 32px rgba(0,0,0,.5); max-width: 340px; width: 90%; }
+#pwa-prompt.show { display: flex; align-items: center; gap: 12px; }
+#pwa-prompt .pwa-text { flex: 1; font-size: 12px; }
+#pwa-prompt .pwa-text strong { display: block; margin-bottom: 2px; }
+#pwa-prompt .pwa-text span { font-size: 10px; color: var(--muted); }
+#pwa-install-btn { background: var(--accent); color: #fff; border: none; padding: 7px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+#pwa-dismiss { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; padding: 0; line-height: 1; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="header-title">
+      <h1>🇲🇦 Morocco 2026</h1>
+      <p>Marrakech · Mar 19–23 · 5 days · 4 nights</p>
+    </div>
+    <div class="weather-pill" id="weather-pill">
+      <div class="weather-temp" id="w-temp">—</div>
+      <div class="weather-desc" id="w-desc">Loading...</div>
+      <div class="weather-city" id="w-city">Marrakech</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <span class="badge orange">🌡️ ~22°C in March</span>
+    <span class="badge">🕌 Marrakech base</span>
+    <span class="badge" id="today-badge">📅 …</span>
+  </div>
+</div>
+
+<div class="tab-nav" id="tab-nav">
+  <button class="tab-btn active" id="btn-overview" onclick="showTab('overview',this)"><span class="day-num">📋</span><span class="day-name">Overview</span></button>
+  <button class="tab-btn" id="btn-mar19" onclick="showTab('mar19',this)"><span class="day-num">Mar 19</span><span class="day-name">Arrive</span></button>
+  <button class="tab-btn" id="btn-mar20" onclick="showTab('mar20',this)"><span class="day-num">Mar 20</span><span class="day-name">Marrakech</span></button>
+  <button class="tab-btn" id="btn-mar21" onclick="showTab('mar21',this)"><span class="day-num">Mar 21</span><span class="day-name">Atlas Mtns</span></button>
+  <button class="tab-btn" id="btn-mar22" onclick="showTab('mar22',this)"><span class="day-num">Mar 22</span><span class="day-name">Essaouira</span></button>
+  <button class="tab-btn" id="btn-mar23" onclick="showTab('mar23',this)"><span class="day-num">Mar 23</span><span class="day-name">Fly Home</span></button>
+</div>
+
+<div id="content-wrap">
+
+<!-- OVERVIEW -->
+<div id="tab-overview" class="tab-content active">
+  <div class="day-hero" style="background-image:url('https://source.unsplash.com/featured/900x400/?marrakech,morocco,medina')">
+    <div class="day-hero-info"><div class="day-hero-label">🇲🇦 Morocco — Marrakech</div><div class="day-hero-sub">Mar 19–23 · 5 days · Medina · Atlas Mountains · Essaouira</div></div>
+  </div>
+  <div class="tab-inner">
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value">5</div><div class="stat-label">Days</div></div>
+      <div class="stat-card"><div class="stat-value">4</div><div class="stat-label">Nights</div></div>
+      <div class="stat-card"><div class="stat-value">22°C</div><div class="stat-label">Avg Temp March</div></div>
+      <div class="stat-card"><div class="stat-value">MAD</div><div class="stat-label">Currency</div></div>
+    </div>
+
+    <div class="currency-box">
+      <div class="currency-title">💰 Currency: Moroccan Dirham (MAD)</div>
+      <div class="currency-row"><span>1 EUR</span><span>≈ 10.7 MAD</span></div>
+      <div class="currency-row"><span>1 USD</span><span>≈ 10.0 MAD</span></div>
+      <div class="currency-row"><span>1 GBP</span><span>≈ 12.5 MAD</span></div>
+      <div class="currency-row"><span>1 MYR</span><span>≈ 2.2 MAD</span></div>
+      <div class="currency-row"><span>Riad (mid): ~300–600 MAD/night</span><span>~€28–56</span></div>
+      <div class="currency-row"><span>Tagine lunch: ~80–120 MAD</span><span>~€7–11</span></div>
+      <div class="currency-row"><span>Petit taxi in city: ~15–30 MAD</span><span>~€1.5–3</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-icon">📋</span><span class="card-title">Trip Plan</span></div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-time">Mar 19</div><div class="tl-text">✈️ Arrive Marrakech · Check in Riad · Jemaa el-Fna night</div></div>
+        <div class="tl-item highlight"><div class="tl-time">Mar 20</div><div class="tl-text">🕌 Full Marrakech Day — Souks · Bahia Palace · Majorelle Garden · Night market</div></div>
+        <div class="tl-item highlight"><div class="tl-time">Mar 21</div><div class="tl-text">⛰️ Atlas Mountains Day Trip — Ourika Valley · Berber villages · Waterfalls</div></div>
+        <div class="tl-item highlight"><div class="tl-time">Mar 22</div><div class="tl-text">🌊 Essaouira Day Trip — Blue boats · Ramparts · Fresh seafood at port</div></div>
+        <div class="tl-item"><div class="tl-time">Mar 23</div><div class="tl-text">🕌 Saadian Tombs · Last souk · ✈️ Fly home</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-icon">✅</span><span class="card-title">Booking Checklist</span></div>
+      <ul class="checklist">
+        <li><span class="check-icon">🔴</span><div class="check-body"><div class="check-label">Riad in Marrakech Medina (4 nights)</div><div class="check-platform">booking.com · Riad Yasmine or similar · Book medina location only</div><div class="check-actions"><a href="https://www.booking.com/searchresults.html?ss=Riad+Marrakech+Medina&checkin=2026-03-19&checkout=2026-03-23&group_adults=2&no_rooms=1" target="_blank" class="book-link">🏨 Book Riad →</a></div></div><span class="check-urgency urgency-urgent">BOOK NOW</span></li>
+        <li><span class="check-icon">🔴</span><div class="check-body"><div class="check-label">Atlas Mountains day trip (Mar 21)</div><div class="check-platform">viator.com or GetYourGuide · Private driver ~400–600 MAD</div><div class="check-actions"><a href="https://www.viator.com/Marrakech/d828-ttd" target="_blank" class="book-link">🏔️ Book Tour →</a></div></div><span class="check-urgency urgency-urgent">BOOK NOW</span></li>
+        <li><span class="check-icon">🟡</span><div class="check-body"><div class="check-label">Majorelle Garden + YSL Museum (Mar 20)</div><div class="check-platform">jardinmajorelle.com · Pre-book to skip queue · ~150 MAD pp</div><div class="check-actions"><a href="https://www.jardinmajorelle.com/ang/" target="_blank" class="book-link">🌿 Book →</a></div></div><span class="check-urgency urgency-soon">THIS WEEK</span></li>
+        <li><span class="check-icon">🟡</span><div class="check-body"><div class="check-label">Hammam experience (Mar 21 evening)</div><div class="check-platform">Les Bains de Marrakech · ~300–500 MAD pp · Traditional scrub</div><div class="check-actions"><a href="https://www.lesbainsdemarrakech.com" target="_blank" class="book-link">🛁 Book →</a></div></div><span class="check-urgency urgency-soon">THIS WEEK</span></li>
+      </ul>
+    </div>
+
+    <details class="intel">
+      <summary>🔍 Essential Morocco Tips — Read Before You Go</summary>
+      <div class="intel-body">
+        <div class="intel-section">
+          <div class="intel-section-title">🏪 Souk Survival</div>
+          <div class="intel-item"><span class="intel-icon">💬</span><div class="intel-body-txt"><strong>Always negotiate.</strong> <span>Starting price in souks is 3–5× the real price. Start at 30% of their ask, meet in the middle. Never accept first price.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🚶</span><div class="intel-body-txt"><strong>Ignore "guides".</strong> <span>Anyone who approaches offering to show you around the medina will ask for money at the end. Say "la shukran" (no thank you).</span></div></div>
+          <div class="intel-item"><span class="intel-icon">📸</span><div class="intel-body-txt"><strong>Photos = money.</strong> <span>Snake charmers, monkey handlers, henna ladies — touching or photographing means you owe them. Be decisive.</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">🍽️ Food Rules</div>
+          <div class="intel-item"><span class="intel-icon">🍺</span><div class="intel-body-txt"><strong>No alcohol in the medina.</strong> <span>Most medina restaurants don't serve alcohol. Hotels and bars in Gueliz (modern district) do. Don't expect it at traditional riads.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🌿</span><div class="intel-body-txt"><strong>Mint tea is never free.</strong> <span>Accepting tea at any shop = you're expected to buy something. If you just want tea, sit at a café and order it (15–20 MAD).</span></div></div>
+          <div class="intel-item"><span class="intel-icon">💧</span><div class="intel-body-txt"><strong>Bottled water only.</strong> <span>Don't drink tap water or ice in restaurants. Buy 1.5L bottles at any épicerie (~5 MAD). Stay hydrated — March is warm.</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">👗 Dress Code</div>
+          <div class="intel-item"><span class="intel-icon">👔</span><div class="intel-body-txt"><strong>Cover up in the medina.</strong> <span>Shoulders + knees covered for both men and women. Light linen works — it's warm but modest. Locals will respect you more.</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">🚕 Getting Around</div>
+          <div class="intel-item"><span class="intel-icon">🚖</span><div class="intel-body-txt"><strong>Always agree price BEFORE getting in petit taxi.</strong> <span>They don't use meters reliably. Medina to Majorelle = ~30 MAD. Airport to medina = ~70–100 MAD. Have dirhams ready.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🗺️</span><div class="intel-body-txt"><strong>Download Maps.me offline.</strong> <span>Google Maps works but offline medina maps on Maps.me are better for the narrow alleyways (derbs) — streets change and GPS drifts.</span></div></div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- MAR 19 — ARRIVE -->
+<div id="tab-mar19" class="tab-content">
+  <div class="day-hero" style="background-image:url('https://source.unsplash.com/featured/900x400/?marrakech,riad,courtyard')">
+    <div class="day-hero-info"><div class="day-hero-label">Arrive Marrakech</div><div class="day-hero-sub">Thu Mar 19 · Check in · First night in the medina</div></div>
+  </div>
+  <div class="tab-inner">
+    <div class="hotel-box">
+      <div class="hotel-name">Riad in Marrakech Medina <span class="tag book-now">BOOK NOW</span></div>
+      <div class="hotel-meta">
+        <div class="hotel-meta-item">📍 <span>Inside medina (old city) — not modern Gueliz district</span></div>
+        <div class="hotel-meta-item">💰 <span>Budget: ~300–400 MAD/nt</span> | <span>Mid: 500–800 MAD/nt</span></div>
+        <div class="hotel-meta-item">⭐ <span>Recommended: Riad Yasmine, Riad BE Marrakech, Riad Dar Zitoun</span></div>
+      </div>
+      <div class="map-links"><a href="https://www.booking.com/searchresults.html?ss=Riad+Marrakech+Medina&checkin=2026-03-19&checkout=2026-03-23&group_adults=2&no_rooms=1" target="_blank" class="book-link">🏨 Book Riad →</a><a href="https://maps.google.com/?q=Marrakech+Medina+Morocco" target="_blank" class="map-btn">📍 Medina</a></div>
+    </div>
+
+    <div class="card"><div class="card-header"><span class="card-icon">🕐</span><span class="card-title">Arrival Plan</span></div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-time">Arrive RAK Airport</div><div class="tl-text">🛬 Marrakech Menara Airport (RAK) — 5km from medina</div><div class="tl-sub">Taxi to riad: agree price BEFORE getting in — ~70–100 MAD. Say "medina" + riad name. Journey: ~15min. Don't use unlicensed drivers at arrivals.</div><div class="map-links"><a href="https://maps.google.com/?q=Marrakech+Menara+Airport" target="_blank" class="map-btn">📍 RAK Airport</a></div></div>
+        <div class="tl-item"><div class="tl-time">Check in</div><div class="tl-text">🏨 Riad check-in — riads often have unmarked doors in narrow alleys</div><div class="tl-sub">Don't panic if you can't find it — call the riad, they'll send someone to collect you from a landmark. This is normal. WhatsApp works.</div></div>
+        <div class="tl-item"><div class="tl-time">Evening</div><div class="tl-text">🚶 Walk to Jemaa el-Fna — ~10min from any medina riad</div><div class="tl-sub">Largest open square in Africa. At night it transforms: storytellers, musicians, acrobats, smoke from food stalls. This is the heart of Marrakech. Just walk in and absorb it.</div><div class="map-links"><a href="https://maps.google.com/?q=Jemaa+el-Fna+Marrakech" target="_blank" class="map-btn">📍 Jemaa el-Fna</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">Dinner — Jemaa el-Fna food stalls</div><div class="tl-text">🍢 Sit at the numbered food stalls in the square</div><div class="tl-sub">Stalls 1–100 are permanent evening stalls. Point at what you want. Order: merguez sausages, brochettes (skewers), harira soup (thick tomato + lentil, ~10 MAD/bowl), sheep head (adventurous). Budget ~80–120 MAD total. Vendors will grab you — just sit at any stall and they'll bring menus.</div><div class="map-links"><a href="https://maps.google.com/?q=Jemaa+el-Fna+food+stalls+Marrakech" target="_blank" class="map-btn">📍 Food Stalls</a></div></div>
+        <div class="tl-item"><div class="tl-time">Night tip</div><div class="tl-text">🍵 Mint tea on a rooftop café overlooking Jemaa el-Fna</div><div class="tl-sub">Café de France or Café Glacier (rooftop terrace) — best view of the whole square. Mint tea ~20–30 MAD. Order it "sans sucre" if you don't want it overly sweet. The view alone is worth it.</div><div class="map-links"><a href="https://maps.google.com/?q=Café+de+France+Marrakech+Jemaa+el-Fna" target="_blank" class="map-btn">📍 Café de France</a></div></div>
+      </div>
+    </div>
+
+    <details class="intel">
+      <summary>🔍 First Night Survival Guide</summary>
+      <div class="intel-body">
+        <div class="intel-section">
+          <div class="intel-section-title">🐍 What You'll See at Jemaa el-Fna</div>
+          <div class="intel-item"><span class="intel-icon">🐍</span><div class="intel-body-txt"><strong>Snake charmers:</strong> <span>If you photograph or get close, they'll demand 50–100 MAD. Watch from a distance or just walk past confidently.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🐒</span><div class="intel-body-txt"><strong>Monkey handlers:</strong> <span>Same deal — touching = paying. Photos = paying. Don't make eye contact if you don't want to engage.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">💃</span><div class="intel-body-txt"><strong>Henna ladies:</strong> <span>They'll grab your hand and start drawing. If you don't want it, say "la" (no) firmly and keep walking.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">✅</span><div class="intel-body-txt"><strong>What's genuinely free:</strong> <span>The Gnaoua musicians, storytellers, acrobats — these perform for the crowd, no obligation. Tip if you enjoy (5–10 MAD).</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">💸 Cash Tips</div>
+          <div class="intel-item"><span class="intel-icon">🏧</span><div class="intel-body-txt"><strong>Get dirhams at airport ATM.</strong> <span>Wafa Bank or CIH at arrivals give good rates. Withdraw 2,000–3,000 MAD for first day. Most medina shops and restaurants are cash only.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">📵</span><div class="intel-body-txt"><strong>Dirhams cannot be taken out of Morocco.</strong> <span>Don't withdraw too much — use it all up before departure or convert back at airport (poor rate).</span></div></div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- MAR 20 — MARRAKECH FULL DAY -->
+<div id="tab-mar20" class="tab-content">
+  <div class="day-hero" style="background-image:url('https://source.unsplash.com/featured/900x400/?marrakech,souks,spices,morocco')">
+    <div class="day-hero-info"><div class="day-hero-label">Marrakech — Full Day</div><div class="day-hero-sub">Fri Mar 20 · Souks · Bahia Palace · Majorelle Garden · Night Market</div></div>
+  </div>
+  <div class="tab-inner">
+    <div class="card"><div class="card-header"><span class="card-icon">🕐</span><span class="card-title">Full Day Plan</span></div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-time">07:30</div><div class="tl-text">☕ Riad breakfast — included in most riads</div><div class="tl-sub">Traditional spread: msemen (flaky flatbread), honey, amlou (almond-argan butter paste), fresh-squeezed OJ. Eat well — busy day ahead.</div></div>
+        <div class="tl-item highlight"><div class="tl-time">09:00 — Souks</div><div class="tl-text">🛍️ Enter the souks from Jemaa el-Fna (north end)</div><div class="tl-sub">Each souk sells one category: Souk Semmarine (carpets + leather), Souk des Babouches (leather slippers), Souk des Teinturiers (dyers souk, vivid hanging fabric), Souk Spice Square (ras el hanout, saffron). Get lost — that's the point. Allow 2hrs.</div><div class="map-links"><a href="https://maps.google.com/?q=Marrakech+Souks+medina" target="_blank" class="map-btn">📍 Souks Entrance</a><a href="https://maps.google.com/?q=Souk+des+Teinturiers+Marrakech" target="_blank" class="map-btn">📍 Dyers' Souk</a></div></div>
+        <div class="tl-item"><div class="tl-time">09:30 — Buy Here</div><div class="tl-text">🌿 Spice Square (Place des Épices)</div><div class="tl-sub">Buy: Saffron (~50 MAD/gram, genuine), Ras el Hanout spice blend (~40 MAD), Rose water (~30 MAD). Don't buy "Berber Viagra" or mystery powders they push on tourists. Negotiate everything — start at 40% of asking price.</div><div class="map-links"><a href="https://maps.google.com/?q=Place+des+Épices+Marrakech" target="_blank" class="map-btn">📍 Spice Square</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">11:30 — Must See</div><div class="tl-text">🏛️ Ben Youssef Madrasa — most beautiful building in Marrakech</div><div class="tl-sub">Former Islamic school founded 1565. Stunning carved stucco, zellige tile, cedar wood. Entrance ~70 MAD. Allow 45min. Students once lived in the tiny rooms around the courtyard — look for the carved inscriptions.</div><div class="map-links"><a href="https://maps.google.com/?q=Ben+Youssef+Madrasa+Marrakech" target="_blank" class="map-btn">📍 Ben Youssef</a></div></div>
+        <div class="tl-item"><div class="tl-time">13:00 — Lunch</div><div class="tl-text">🍲 Nomad Restaurant — rooftop, modern Moroccan</div><div class="tl-sub">Above the spice market. Vegetable tagine or chicken bastilla (~120–150 MAD). Book ahead or arrive early. Alternatively: Café Clock near Riad Zitoun for traditional msemen + harira (60 MAD total). Both are tourist-friendly but genuine.</div><div class="map-links"><a href="https://maps.google.com/?q=Nomad+Restaurant+Marrakech" target="_blank" class="map-btn">📍 Nomad</a><a href="https://maps.google.com/?q=Café+Clock+Marrakech" target="_blank" class="map-btn">📍 Café Clock</a></div></div>
+        <div class="tl-item"><div class="tl-time">14:30</div><div class="tl-text">🏰 Bahia Palace — 19th century vizier's palace</div><div class="tl-sub">Entry ~70 MAD. The building was designed to be the greatest palace of its time — 8 hectares of gardens and ornate rooms. The vizier had 4 wives and 24 concubines, each with their own suite. The French later used it as a government building during colonisation. Allow 45min.</div><div class="map-links"><a href="https://maps.google.com/?q=Bahia+Palace+Marrakech" target="_blank" class="map-btn">📍 Bahia Palace</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">16:00</div><div class="tl-text">🌿 Majorelle Garden + YSL Museum <span class="tag book-now">PRE-BOOK</span></div><div class="tl-sub">Taxi from palace: ~25 MAD. Blue-painted garden designed by French painter Majorelle, saved from destruction and restored by Yves Saint Laurent. Cobalt blue buildings + cacti + fountains. Entry: garden ~150 MAD, YSL museum extra 100 MAD. Instagram heaven but genuinely beautiful. YSL is buried in the garden. Pre-book online — queues are long.</div><div class="map-links"><a href="https://maps.google.com/?q=Majorelle+Garden+Marrakech" target="_blank" class="map-btn">📍 Majorelle Garden</a><a href="https://www.jardinmajorelle.com/ang/" target="_blank" class="book-link">🌿 Book →</a></div></div>
+        <div class="tl-item"><div class="tl-time">18:30</div><div class="tl-text">🚖 Taxi back to medina · Freshen up at riad</div></div>
+        <div class="tl-item highlight"><div class="tl-time">19:30 — PEAK TIME</div><div class="tl-text">🎭 Jemaa el-Fna at its best — sunset and after dark</div><div class="tl-sub">The square is completely different at 19:30 vs daytime. All the food stalls are lit up, musicians are playing, storytellers have crowds. Walk the full perimeter first, then pick a food stall. Order: merguez, snail soup (yes, really — 10 MAD a bowl, a local classic), grilled fish, fresh orange juice from the stalls (~4 MAD/glass — best OJ you'll have).</div><div class="map-links"><a href="https://maps.google.com/?q=Jemaa+el-Fna+square+Marrakech" target="_blank" class="map-btn">📍 Jemaa el-Fna</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">21:00 — Dinner</div><div class="tl-text">🍽️ Le Jardin — garden restaurant, Moroccan classics</div><div class="tl-sub">Hidden in the medina (Mouassine area). Orange trees overhead, lanterns everywhere. Order: chicken pastilla (sweet-savoury pie with almonds + spices, ~120 MAD), lamb tagine with prunes (~110 MAD), kefta mechoui. Reservation recommended — WhatsApp +212 5243-78295. ~300–400 MAD pp for full meal.</div><div class="map-links"><a href="https://maps.google.com/?q=Le+Jardin+Restaurant+Marrakech+Mouassine" target="_blank" class="map-btn">📍 Le Jardin</a></div></div>
+      </div>
+    </div>
+
+    <details class="intel">
+      <summary>🔍 Souk Buying Guide — What's Worth It</summary>
+      <div class="intel-body">
+        <div class="intel-section">
+          <div class="intel-section-title">✅ Worth Buying</div>
+          <div class="intel-item"><span class="intel-icon">🌹</span><div class="intel-body-txt"><strong>Argan oil</strong> <span>— food-grade (culinary) or cosmetic. Buy from a women's argan cooperative, not souk vendors. Authentic: ~150–200 MAD/250ml. Souk stuff is often diluted.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🧦</span><div class="intel-body-txt"><strong>Babouche slippers</strong> <span>— leather, hand-stitched. ~80–150 MAD if you negotiate. Yellow = traditional men's, pointed = decorative. Souk des Babouches for best selection.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🪔</span><div class="intel-body-txt"><strong>Brass lanterns</strong> <span>— authentic hand-punched brass, not cheap cast versions. Test by tapping: real brass rings, fake thuds. ~150–400 MAD depending on size.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🌿</span><div class="intel-body-txt"><strong>Saffron</strong> <span>— Moroccan saffron is world-class. Buy stigma threads (not powder = adulterated). ~50 MAD/gram at spice square. Half of what you'd pay in Europe.</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">❌ Skip These</div>
+          <div class="intel-item"><span class="intel-icon">🪨</span><div class="intel-body-txt"><strong>Fossils + "argan" products at souks</strong> <span>— often fake. The roadside fossil sellers near Ourika sell the real thing at better prices.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🧴</span><div class="intel-body-txt"><strong>Souk argan oil</strong> <span>— usually adulterated. Buy from a certified women's cooperative instead.</span></div></div>
+        </div>
+      </div>
+    </details>
+
+    <div class="card"><div class="card-header"><span class="card-icon">🍽️</span><span class="card-title">Must Eat Today</span></div>
+      <div class="food-item">🥧 <div><strong>Bastilla (Pastilla)</strong> — sweet-savoury pigeon/chicken pie in filo pastry with almonds + cinnamon. Most unique dish in Morocco. ~120 MAD</div></div>
+      <div class="food-item">🍲 <div><strong>Lamb tagine with prunes</strong> — slow-cooked in a clay cone, sweet + rich. ~110 MAD</div></div>
+      <div class="food-item">🥣 <div><strong>Harira soup</strong> — thick tomato + lentil + chickpea soup. 10–15 MAD/bowl. Order at food stalls.</div></div>
+      <div class="food-item">🍊 <div><strong>Fresh-squeezed orange juice</strong> — Jemaa el-Fna stalls. ~4 MAD/glass. Best you'll ever have. Order 3.</div></div>
+      <div class="food-item">🐌 <div><strong>Snail soup (babbouche)</strong> — tiny snails in herbal broth, 10 MAD/bowl. Optional but very local.</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAR 21 — ATLAS MOUNTAINS -->
+<div id="tab-mar21" class="tab-content">
+  <div class="day-hero" style="background-image:url('https://source.unsplash.com/featured/900x400/?atlas+mountains,morocco,berber')">
+    <div class="day-hero-info"><div class="day-hero-label">Atlas Mountains</div><div class="day-hero-sub">Sat Mar 21 · Ourika Valley · Berber Villages · Waterfalls · Hammam</div></div>
+  </div>
+  <div class="tab-inner">
+    <div class="luggage-note">🧳 Day pack only. All bags at riad. Private driver collects you.</div>
+    <div class="hotel-box">
+      <div class="hotel-name">Private Driver Day Trip <span class="tag book-now">BOOK NOW</span></div>
+      <div class="hotel-meta"><div class="hotel-meta-item">💰 <span>~400–600 MAD/day</span> (full car, not per person)</div><div class="hotel-meta-item">⏰ <span>08:00 pickup from riad</span></div><div class="hotel-meta-item">🔗 <span>Negotiate at your riad or book Viator</span></div></div>
+      <div class="map-links"><a href="https://www.viator.com/Marrakech/d828-ttd" target="_blank" class="book-link">🏔️ Book on Viator →</a></div>
+    </div>
+    <div class="card"><div class="card-header"><span class="card-icon">🕐</span><span class="card-title">Day Plan</span></div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-time">08:00</div><div class="tl-text">🚗 Driver pickup from riad · Head south on Route d'Ourika</div><div class="tl-sub">45min drive to valley. Ask driver to stop at the roadside argan oil cooperative (women-run, about 20min from Marrakech) — sample and buy authentic argan oil here at fair prices.</div><div class="map-links"><a href="https://maps.google.com/?q=Ourika+Valley+Morocco" target="_blank" class="map-btn">📍 Ourika Valley</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">09:30 — Berber Villages</div><div class="tl-text">🏘️ Ourika Valley — Berber village stops</div><div class="tl-sub">Tell your driver: "stop at authentic Berber village, not tourist stop." The valley has real working villages with terraced fields. Watch: pottery making, weaving, traditional bread baking. Don't feel obligated to buy — but small purchases (10–20 MAD for bread, small pottery) are appreciated.</div></div>
+        <div class="tl-item highlight"><div class="tl-time">10:30 — Waterfall Hike</div><div class="tl-text">💧 Setti Fatma Waterfalls — 7 cascading falls</div><div class="tl-sub">Entry to hike: ~10 MAD. Takes 45min–1hr to reach all 7 (you don't have to do all). First waterfall is easy (10min), the others require scrambling. Wear decent shoes — the path is slippery. Local boys will try to "guide" you — you don't need them for the first falls. ~100 MAD if you take a guide for the full set (negotiable).</div><div class="map-links"><a href="https://maps.google.com/?q=Setti+Fatma+Waterfalls+Morocco" target="_blank" class="map-btn">📍 Setti Fatma Falls</a></div></div>
+        <div class="tl-item"><div class="tl-time">12:30 — Lunch</div><div class="tl-text">🍲 Berber village restaurant in the valley</div><div class="tl-sub">Roadside restaurants in Ourika serve the best tagine of the trip. Sit on the terrace above the river. Order: tagine of lamb or chicken (~80 MAD), fresh bread (~10 MAD), mint tea. Don't overpay — 80–120 MAD is right for a full lunch.</div></div>
+        <div class="tl-item"><div class="tl-time">14:30</div><div class="tl-text">🐪 Atlas viewpoint + optional camel ride</div><div class="tl-sub">The views of the High Atlas peaks (some snow-capped in March) are stunning. Camel rides at tourist stops: ~100–150 MAD for 20min. Negotiate hard. It's a bit touristy but it's the moment. Skip if you've done it before.</div></div>
+        <div class="tl-item"><div class="tl-time">16:00</div><div class="tl-text">🚗 Drive back to Marrakech</div></div>
+        <div class="tl-item highlight"><div class="tl-time">18:00 — Hammam</div><div class="tl-text">🛁 Traditional Hammam experience — Les Bains de Marrakech</div><div class="tl-sub">Book in advance: lesbainsdemarrakech.com. Classic hammam + kessa scrub + rhassoul clay mask = ~300–500 MAD pp. The kessa scrub removes layers of dead skin — you won't believe what comes off. Book the "Traditional Hammam" not the fancy spa version. Allow 1.5hrs. Bring nothing — they provide everything.</div><div class="map-links"><a href="https://maps.google.com/?q=Les+Bains+de+Marrakech" target="_blank" class="map-btn">📍 Les Bains</a><a href="https://www.lesbainsdemarrakech.com" target="_blank" class="book-link">🛁 Book →</a></div></div>
+        <div class="tl-item"><div class="tl-time">20:30 — Dinner</div><div class="tl-text">🍽️ Dinner in the Mouassine neighbourhood</div><div class="tl-sub">After hammam you'll be relaxed and hungry. Moroccan salad spread (zaalouk + taktouka + hummus) + couscous (Fridays are the traditional couscous day in Morocco). Restaurant Dar Zitoun is excellent for traditional dinner. ~150–200 MAD pp.</div><div class="map-links"><a href="https://maps.google.com/?q=Mouassine+Marrakech" target="_blank" class="map-btn">📍 Mouassine</a></div></div>
+      </div>
+    </div>
+    <details class="intel">
+      <summary>🔍 Atlas Mountains Local Intel</summary>
+      <div class="intel-body">
+        <div class="intel-section">
+          <div class="intel-section-title">🌡️ Weather in March</div>
+          <div class="intel-item"><span class="intel-icon">🧥</span><div class="intel-body-txt"><strong>Bring a jacket.</strong> <span>The valley is noticeably cooler than Marrakech (can be 10–15°C at higher elevations). Light layer needed especially for waterfalls hike.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">❄️</span><div class="intel-body-txt"><strong>Snow on peaks.</strong> <span>In March the High Atlas peaks above 2,500m are often snow-capped — spectacular backdrop. If you want to actually be in snow, ask driver to go toward Oukaïmeden ski resort (~1.5hrs from Marrakech, 2,650m).</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">🛒 What to Buy Here</div>
+          <div class="intel-item"><span class="intel-icon">🧴</span><div class="intel-body-txt"><strong>Authentic argan oil</strong> <span>— from the women's cooperative on the way up. Food grade (~200 MAD/250ml) or cosmetic (~150 MAD). Far better quality than souks.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🪨</span><div class="intel-body-txt"><strong>Fossils</strong> <span>— Morocco is one of the world's top fossil sites. Ammonites and trilobites from local roadside sellers are usually real (Morocco exports millions). ~30–80 MAD for a nice piece. Negotiate.</span></div></div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- MAR 22 — ESSAOUIRA -->
+<div id="tab-mar22" class="tab-content">
+  <div class="day-hero" style="background-image:url('https://source.unsplash.com/featured/900x400/?essaouira,morocco,blue+boats,port')">
+    <div class="day-hero-info"><div class="day-hero-label">Essaouira — Coastal Town</div><div class="day-hero-sub">Sun Mar 22 · Blue boats · Fresh seafood · Medina · Ramparts</div></div>
+  </div>
+  <div class="tab-inner">
+    <div class="luggage-note">🧳 Day trip — all bags stay at riad in Marrakech.</div>
+    <div class="card"><div class="card-header"><span class="card-icon">🚌</span><span class="card-title">Getting to Essaouira (2.5hrs)</span></div>
+      <div class="timeline">
+        <div class="tl-item highlight"><div class="tl-time">Option A: CTM Bus (Best Value)</div><div class="tl-text">🚌 CTM Bus from Marrakech Bus Station</div><div class="tl-sub">~60–80 MAD one way · Comfortable, AC, ~2.5hrs · Departs Bab Doukkala bus station. Buy ticket at station morning of (or night before). Return last bus ~18:00 — confirm timing at station.</div><div class="map-links"><a href="https://maps.google.com/?q=CTM+Bus+Station+Marrakech+Bab+Doukkala" target="_blank" class="map-btn">📍 CTM Station</a></div></div>
+        <div class="tl-item"><div class="tl-time">Option B: Shared Grand Taxi</div><div class="tl-text">🚖 Grand taxi from Bab Doukkala</div><div class="tl-sub">~80–100 MAD pp · Faster (~2hrs) · Leave when full (6 passengers). Ask at the taxi rank for "Essaouira". More flexible on return.</div></div>
+        <div class="tl-item"><div class="tl-time">Option C: Private Day Trip</div><div class="tl-text">🚗 Private driver (ask your riad)</div><div class="tl-sub">~600–800 MAD for the car. Most comfortable, flexible timing. Ask riad to arrange the night before.</div></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><span class="card-icon">🕐</span><span class="card-title">Essaouira Day Plan</span></div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-time">07:30</div><div class="tl-text">☕ Quick riad breakfast · Head to bus/taxi station by 08:00</div></div>
+        <div class="tl-item"><div class="tl-time">~10:30 — Arrive</div><div class="tl-text">🌊 Arrive Essaouira · Walk to the port first</div><div class="tl-sub">Essaouira is completely different from Marrakech — cool ocean breeze, white-and-blue buildings, totally relaxed. No hassling, no aggressive vendors. The contrast will hit you immediately.</div><div class="map-links"><a href="https://maps.google.com/?q=Essaouira+Port+Morocco" target="_blank" class="map-btn">📍 Essaouira Port</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">11:00 — MUST DO</div><div class="tl-text">🐟 Fresh seafood at the port fish stalls</div><div class="tl-sub">Walk along the port wall — rows of blue fishing boats + fish stalls. Choose your fish fresh from the display, they grill it right there. ~60–80 MAD for sardines + grilled prawns + bread. The freshest fish of your life. Haggle slightly. Eat standing up with locals. This is THE Essaouira experience.</div><div class="map-links"><a href="https://maps.google.com/?q=Essaouira+fish+market+port" target="_blank" class="map-btn">📍 Fish Stalls</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">12:30</div><div class="tl-text">🏰 Ramparts walk (Skala de la Ville)</div><div class="tl-sub">Free. Walk along the Portuguese-built sea ramparts — massive cannons still pointing out to sea, ocean crashing below. The Atlantic views are spectacular. Essaouira was a major Portuguese trading port — this is why the architecture looks different from Marrakech. Allow 30min.</div><div class="map-links"><a href="https://maps.google.com/?q=Skala+de+la+Ville+Essaouira+ramparts" target="_blank" class="map-btn">📍 Ramparts</a></div></div>
+        <div class="tl-item"><div class="tl-time">13:30</div><div class="tl-text">🎵 Gnaoua music in the medina</div><div class="tl-sub">Essaouira is the birthplace of Gnaoua music (African spiritual music tradition). You'll hear it everywhere. The medina here is calm — browse silver jewellery, thuya wood crafts (local specialty), goat leather bags without being harassed.</div><div class="map-links"><a href="https://maps.google.com/?q=Essaouira+Medina+Morocco" target="_blank" class="map-btn">📍 Essaouira Medina</a></div></div>
+        <div class="tl-item"><div class="tl-time">14:30</div><div class="tl-text">🛍️ Buy: Thuya Wood + Silver</div><div class="tl-sub">Essaouira's specialties: thuya wood (aromatic local wood carved into boxes, chessboards, frames — unique to this region, ~80–200 MAD), silver Berber jewellery (more authentic here than Marrakech), argan oil products (coastal cooperatives). Prices lower and quality higher than Marrakech souks.</div></div>
+        <div class="tl-item highlight"><div class="tl-time">15:30</div><div class="tl-text">🌊 Essaouira beach — kite surfing capital of Africa</div><div class="tl-sub">Massive wide beach south of the medina. Strong Atlantic wind makes it perfect for kite surfing — dozens of kites always in the air. Walk the beach for 20min (it's windy — fun). Don't go too far as sandstorms can be intense. Watch the kite surfers from the beach wall.</div><div class="map-links"><a href="https://maps.google.com/?q=Essaouira+beach+Morocco" target="_blank" class="map-btn">📍 Essaouira Beach</a></div></div>
+        <div class="tl-item"><div class="tl-time">16:00</div><div class="tl-text">🚌 Head back to bus/taxi station for return to Marrakech</div><div class="tl-sub">Don't cut it too close — last CTM bus is usually 18:00. Arrive at station 30min early. Check the time on arrival.</div></div>
+        <div class="tl-item"><div class="tl-time">~19:00</div><div class="tl-text">Arrive Marrakech · Dinner in medina</div><div class="tl-sub">Simple final evening: rooftop restaurant in the medina. Al Fassia (female-run, all-female staff, best traditional Moroccan in Marrakech, ~250 MAD pp) or Riad Yima (Andy Warhol-meets-Morocco décor, quirky, ~150 MAD pp).</div><div class="map-links"><a href="https://maps.google.com/?q=Al+Fassia+Restaurant+Marrakech" target="_blank" class="map-btn">📍 Al Fassia</a></div></div>
+      </div>
+    </div>
+    <details class="intel">
+      <summary>🔍 Essaouira Local Intel</summary>
+      <div class="intel-body">
+        <div class="intel-section">
+          <div class="intel-section-title">🎬 Famous Connections</div>
+          <div class="intel-item"><span class="intel-icon">🎸</span><div class="intel-body-txt"><strong>Jimi Hendrix</strong> <span>— spent time here in 1969. There's a Jimi Hendrix café near the medina. He supposedly wrote "Castles Made of Sand" here (disputed, but the legend stuck).</span></div></div>
+          <div class="intel-item"><span class="intel-icon">👑</span><div class="intel-body-txt"><strong>Game of Thrones</strong> <span>— Astapor (the Unsullied slave city) was filmed in Essaouira. The port/rampart area is instantly recognisable if you're a fan.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🎭</span><div class="intel-body-txt"><strong>Orson Welles' Othello</strong> <span>— filmed here in 1952. The ramparts and square are in the opening scenes. There's a plaque near the port.</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">🌬️ Weather Warning</div>
+          <div class="intel-item"><span class="intel-icon">💨</span><div class="intel-body-txt"><strong>Wind is constant and strong.</strong> <span>Essaouira is literally called "the windy city." Bring a light scarf/jacket even in March. The beach can have sandstorms. Your photos will have windswept hair. Embrace it.</span></div></div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<!-- MAR 23 — FLY HOME -->
+<div id="tab-mar23" class="tab-content">
+  <div class="day-hero" style="background-image:url('https://source.unsplash.com/featured/900x400/?marrakech,koutoubia,mosque,morning')">
+    <div class="day-hero-info"><div class="day-hero-label">Last Morning + Fly Home</div><div class="day-hero-sub">Mon Mar 23 · Saadian Tombs · Last souk · ✈️ Depart</div></div>
+  </div>
+  <div class="tab-inner">
+    <div class="luggage-note">🧳 Full checkout riad. Bags to airport. Store with riad if you want last morning free.</div>
+    <div class="card"><div class="card-header"><span class="card-icon">🕐</span><span class="card-title">Day Plan</span></div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-time">07:30</div><div class="tl-text">☕ Final riad breakfast · Checkout or store bags</div><div class="tl-sub">Most riads will store your bags until your taxi — ask at reception.</div></div>
+        <div class="tl-item highlight"><div class="tl-time">09:00</div><div class="tl-text">⚰️ Saadian Tombs — discovered hidden for 200 years</div><div class="tl-sub">Entry ~70 MAD. The 16th century tombs of the Saadian dynasty were walled up by a rival sultan and forgotten. Rediscovered in 1917 by French colonial aerial photographs. Stunning carved stucco and Italian Carrara marble. The "Chamber of 12 Pillars" is one of the finest examples of Moorish architecture in Morocco. Only 2 rooms visible but worth every dirham. Allow 30min — gets crowded after 10am so go early.</div><div class="map-links"><a href="https://maps.google.com/?q=Saadian+Tombs+Marrakech" target="_blank" class="map-btn">📍 Saadian Tombs</a></div></div>
+        <div class="tl-item"><div class="tl-time">10:00</div><div class="tl-text">🏚️ El Badi Palace ruins</div><div class="tl-sub">Entry ~70 MAD. What's left of what was once the most magnificent palace in the world (16th century). Stripped of all marble, gold, and ornament by a rival sultan. What remains: a vast empty courtyard, sunken gardens, stork nests on every tower, underground passages. It's hauntingly beautiful in its ruin. Allow 30min.</div><div class="map-links"><a href="https://maps.google.com/?q=El+Badi+Palace+Marrakech" target="_blank" class="map-btn">📍 El Badi Palace</a></div></div>
+        <div class="tl-item"><div class="tl-time">11:00</div><div class="tl-text">🛍️ Last souk run — anything you missed</div><div class="tl-sub">Spend remaining dirhams. Remember: dirhams cannot leave Morocco (you can convert at airport but rate is terrible). Use them up. Good last buys: saffron, argan oil, babouche slippers, small brass teapot.</div></div>
+        <div class="tl-item"><div class="tl-time">12:30</div><div class="tl-text">🍲 Final lunch — Café Arabe or Terrasse des Épices</div><div class="tl-sub">Café Arabe: rooftop, great views of medina. Order: couscous royale (huge) or simple tagine. Terrasse des Épices: above spice market, excellent for final views. ~100–150 MAD pp.</div><div class="map-links"><a href="https://maps.google.com/?q=Café+Arabe+Marrakech" target="_blank" class="map-btn">📍 Café Arabe</a></div></div>
+        <div class="tl-item highlight"><div class="tl-time">Airport</div><div class="tl-text">🚖 Taxi to RAK Airport — agree price first: ~70–100 MAD</div><div class="tl-sub">Allow 30min journey + 2hrs before international flight. RAK airport is small — you'll be through security in 20min but go early. Duty free: buy extra argan oil and Moroccan spice sets at airport (accepts euros/cards, reasonable prices).</div><div class="map-links"><a href="https://maps.google.com/?q=Marrakech+Menara+Airport+RAK" target="_blank" class="map-btn">📍 RAK Airport</a></div></div>
+      </div>
+    </div>
+    <details class="intel">
+      <summary>🔍 Airport + Final Tips</summary>
+      <div class="intel-body">
+        <div class="intel-section">
+          <div class="intel-section-title">✈️ Airport Tips</div>
+          <div class="intel-item"><span class="intel-icon">💸</span><div class="intel-body-txt"><strong>Spend all dirhams before airport.</strong> <span>The airport conversion rate is terrible. Buy last-minute gifts, tip the riad staff (50–100 MAD per person per night is standard), use dirhams for taxi.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🧴</span><div class="intel-body-txt"><strong>Liquids in hand luggage.</strong> <span>If you bought argan oil, move to checked baggage. Airport security is strict about liquids.</span></div></div>
+          <div class="intel-item"><span class="intel-icon">🛍️</span><div class="intel-body-txt"><strong>Duty free is worth it.</strong> <span>RAK airport has good argan oil + spice sets at fair prices and accepts cards. Better option than converting leftover cash.</span></div></div>
+        </div>
+        <div class="intel-section">
+          <div class="intel-section-title">🙏 Riad Tipping</div>
+          <div class="intel-item"><span class="intel-icon">💰</span><div class="intel-body-txt"><strong>Standard:</strong> <span>50–100 MAD per person per night for the main staff (housekeeper, breakfast person). Leave at reception or hand directly. It makes a huge difference to their income.</span></div></div>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+</div><!-- /content-wrap -->
+
+<div class="swipe-nav">
+  <span id="swipe-prev" style="cursor:pointer">‹ prev</span>
+  <span id="swipe-day-label" style="color:var(--muted);font-size:11px"></span>
+  <span id="swipe-next" style="cursor:pointer">next ›</span>
+</div>
+
+<div id="pwa-prompt">
+  <div class="pwa-text"><strong>📲 Add to Home Screen</strong><span>One-tap access, works offline</span></div>
+  <button id="pwa-install-btn">Install</button>
+  <button id="pwa-dismiss" onclick="document.getElementById('pwa-prompt').classList.remove('show');localStorage.setItem('pwa-d','1')">×</button>
+</div>
+
+<script>
+const TABS = ['overview','mar19','mar20','mar21','mar22','mar23'];
+const TAB_LABELS = ['Overview','Mar 19','Mar 20','Mar 21','Mar 22','Mar 23'];
+let currentIdx = 0;
+const DAY_MAP = {'2026-03-19':'mar19','2026-03-20':'mar20','2026-03-21':'mar21','2026-03-22':'mar22','2026-03-23':'mar23'};
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  if(btn){ btn.classList.add('active'); btn.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'}); }
+  else { const b=document.getElementById('btn-'+name); if(b){b.classList.add('active');b.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});} }
+  currentIdx = TABS.indexOf(name);
+  updateSwipeNav();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function updateSwipeNav(){
+  document.getElementById('swipe-prev').style.opacity = currentIdx>0?'0.7':'0.15';
+  document.getElementById('swipe-next').style.opacity = currentIdx<TABS.length-1?'0.7':'0.15';
+  document.getElementById('swipe-day-label').textContent = TAB_LABELS[currentIdx];
+}
+function goNext(){ if(currentIdx<TABS.length-1) showTab(TABS[currentIdx+1],null); }
+function goPrev(){ if(currentIdx>0) showTab(TABS[currentIdx-1],null); }
+document.getElementById('swipe-prev').addEventListener('click',goPrev);
+document.getElementById('swipe-next').addEventListener('click',goNext);
+
+let tx=0,ty=0;
+document.getElementById('content-wrap').addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+document.getElementById('content-wrap').addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx, dy=e.changedTouches[0].clientY-ty;
+  if(Math.abs(dx)>Math.abs(dy)&&Math.abs(dx)>60){ dx<0?goNext():goPrev(); }
+},{passive:true});
+
+function initToday(){
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('today-badge').textContent='📅 '+today;
+  const k=DAY_MAP[today];
+  if(k){ const b=document.getElementById('btn-'+k); if(b){b.classList.add('today-tab');setTimeout(()=>showTab(k,b),350);} }
+}
+
+// Weather — Open-Meteo Marrakech
+async function initWeather(){
+  try {
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude=31.6295&longitude=-7.9811&current=temperature_2m,weather_code&timezone=auto');
+    const d=await r.json(); const c=d.current;
+    const icons={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',61:'🌧️',80:'🌦️',95:'⛈️'};
+    const descs={0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Light drizzle',61:'Rain',80:'Showers',95:'Thunderstorm'};
+    const icon=icons[c.weather_code]||'🌡️';
+    document.getElementById('w-temp').textContent=icon+' '+Math.round(c.temperature_2m)+'°C';
+    document.getElementById('w-desc').textContent=descs[c.weather_code]||'';
+  } catch(e){ document.getElementById('w-temp').textContent='22°C'; document.getElementById('w-desc').textContent='Warm + sunny'; }
+}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+let dp;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e;if(!localStorage.getItem('pwa-d'))setTimeout(()=>document.getElementById('pwa-prompt').classList.add('show'),3000);});
+document.getElementById('pwa-install-btn').addEventListener('click',async()=>{if(dp){dp.prompt();await dp.userChoice;dp=null;document.getElementById('pwa-prompt').classList.remove('show');}else alert('iPhone: Share → Add to Home Screen');});
+
+initToday();
+initWeather();
+updateSwipeNav();
+</script>
+</body>
+</html>
